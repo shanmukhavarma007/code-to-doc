@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { CodeInputPanel } from '../components/CodeInputPanel'
 import GenerateButton from '../components/GenerateButton'
 import OutputPanel from '../components/OutputPanel'
@@ -8,13 +8,58 @@ import Navbar from '../components/Navbar'
 import { useGenerate, useRateLimit } from '../hooks/useGenerate'
 import { useAuth } from '../context/AuthContext'
 
+const STORAGE_KEY = 'code_to_doc_state'
+
 const Home = () => {
   const [code, setCode] = useState('')
   const [language, setLanguage] = useState('')
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
-  const { user } = useAuth()
-  const { output, setOutput, isGenerating, error, generate, clearOutput } = useGenerate()
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const { user, isLoading: authLoading } = useAuth()
+  const { output, setOutput, isGenerating, error, generate } = useGenerate()
   const { cooldown, startCooldown, checkRateLimit } = useRateLimit()
+
+  useEffect(() => {
+    const loadSavedState = () => {
+      if (window.storage?.get) {
+        const saved = window.storage.get(STORAGE_KEY)
+        if (saved) {
+          try {
+            const parsed = typeof saved === 'string' ? JSON.parse(saved) : saved
+            if (parsed.code) setCode(parsed.code)
+            if (parsed.language) setLanguage(parsed.language)
+            if (parsed.output) setOutput(parsed.output)
+          } catch (e) {
+            console.warn('Failed to parse saved state:', e)
+          }
+        }
+      }
+      setIsInitialLoading(false)
+    }
+
+    if (!authLoading) {
+      loadSavedState()
+    }
+  }, [authLoading, setOutput])
+
+  useEffect(() => {
+    if (!isInitialLoading && !authLoading) {
+      const stateToSave = { code, language, output }
+      if (window.storage?.set) {
+        window.storage.set(STORAGE_KEY, JSON.stringify(stateToSave))
+      }
+    }
+  }, [code, language, output, isInitialLoading, authLoading])
+
+  const handleSessionExpired = useCallback(() => {
+    window.location.reload()
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    if (code.trim()) {
+      generate(code, language || 'auto')
+    }
+  }, [code, language, generate])
 
   const handleGenerate = useCallback(async () => {
     if (!code.trim()) return
@@ -68,7 +113,22 @@ const Home = () => {
           </div>
 
           <div className="bg-bg-surface border border-border rounded-xl p-6">
-            <OutputPanel output={output} error={error} />
+            {isInitialLoading || authLoading ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="inline-block w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="text-text-muted font-mono text-sm">Loading...</p>
+                </div>
+              </div>
+            ) : (
+              <OutputPanel
+                output={output}
+                error={error}
+                isLoading={isGenerating}
+                onRetry={handleRetry}
+                onSessionExpired={handleSessionExpired}
+              />
+            )}
           </div>
         </div>
 

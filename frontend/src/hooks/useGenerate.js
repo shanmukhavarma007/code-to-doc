@@ -54,11 +54,22 @@ export const useGenerate = () => {
     try {
       const response = await api.post('/generate', { code, language })
       setOutput(response.data.output)
+      if (window.storage?.set) {
+        window.storage.set('lastOutput', response.data.output)
+      }
       return { success: true, cached: response.data.cached }
     } catch (err) {
-      const message = err.response?.data?.error || 'Generation failed'
+      const status = err.response?.status
+      let message = err.response?.data?.error || 'Generation failed'
+      let isAuthError = false
+
+      if (status === 401) {
+        message = 'Session expired. Please refresh to continue.'
+        isAuthError = true
+      }
+
       setError(message)
-      return { success: false, error: message }
+      return { success: false, error: message, isAuthError, status }
     } finally {
       setIsGenerating(false)
     }

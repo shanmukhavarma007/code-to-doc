@@ -2,10 +2,17 @@ import { useState, useMemo } from 'react'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
-const OutputPanel = ({ output, error }) => {
+const OutputPanel = ({ output, error, isLoading, onRetry, onSessionExpired }) => {
   const [viewMode, setViewMode] = useState('rendered')
   const [copied, setCopied] = useState(false)
   const [copyError, setCopyError] = useState(null)
+
+  const isAuthError = error && (
+    error.toLowerCase().includes('authentication') ||
+    error.toLowerCase().includes('auth') ||
+    error.toLowerCase().includes('unauthorized') ||
+    error.toLowerCase().includes('session')
+  )
 
   marked.setOptions({
     breaks: true,
@@ -60,8 +67,46 @@ const OutputPanel = ({ output, error }) => {
           <h2 className="font-mono text-lg font-semibold text-text-primary">Documentation</h2>
         </div>
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-status-danger font-mono text-sm bg-status-danger/10 border border-status-danger/20 rounded-lg px-4 py-3">
-            {error}
+          <div className="text-center max-w-md">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-status-danger/10 border border-status-danger/20 mb-4">
+              <svg className="w-6 h-6 text-status-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <p className="text-status-danger font-mono text-sm mb-4">{error}</p>
+            {isAuthError ? (
+              <button
+                onClick={onSessionExpired || (() => window.location.reload())}
+                className="px-4 py-2 bg-accent hover:bg-accent/80 text-bg-primary font-mono text-sm rounded-lg transition-colors"
+              >
+                Session expired - Click to reload
+              </button>
+            ) : onRetry ? (
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={onRetry}
+                  className="px-4 py-2 bg-bg-elevated border border-border hover:border-accent text-text-primary font-mono text-sm rounded-lg transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-mono text-lg font-semibold text-text-primary">Documentation</h2>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-text-muted font-mono text-sm">Generating documentation...</p>
           </div>
         </div>
       </div>
