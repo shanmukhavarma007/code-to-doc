@@ -1,0 +1,54 @@
+services:
+  # Backend API Service
+  - type: web
+    name: code-to-doc-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 10
+      - key: SLOW_DOWN_DELAY_MS
+        value: 500
+      - key: SLOW_DOWN_AFTER_REQUESTS
+        value: 6
+      - key: CORS_ORIGIN
+        fromService:
+          type: static
+          name: code-to-doc-frontend
+          property: url
+      - key: FRONTEND_URL
+        fromService:
+          type: static
+          name: code-to-doc-frontend
+          property: url
+
+  # Frontend Static Site
+  - type: static
+    name: code-to-doc-frontend
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: code-to-doc-backend
+          property: url

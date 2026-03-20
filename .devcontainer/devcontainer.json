@@ -1,0 +1,13 @@
+{
+  "forwardPorts": [3000, 3001],
+  "portsAttributes": {
+    "3000": {
+      "label": "Frontend",
+      "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "Backend",
+      "onAutoForward": "silent"
+    }
+  }
+}
