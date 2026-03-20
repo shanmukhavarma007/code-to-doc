@@ -2,7 +2,7 @@ import logger from './logger.js'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'anthropic/claude-3-haiku-20240229'
+const MODEL = 'meta-llama/llama-3.2-3b-instruct:free'
 
 if (!OPENROUTER_API_KEY) {
   logger.warn('OPENROUTER_API_KEY is not set - documentation generation will fail')
