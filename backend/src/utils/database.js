@@ -12,8 +12,11 @@ const connectDB = async () => {
     logger.info(`MongoDB Connected: ${mongoose.connection.host}`)
   } catch (error) {
     logger.error('MongoDB connection error:', error.message)
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
       process.exit(1)
+    }
+    if (process.env.VERCEL) {
+      throw error
     }
     logger.warn('Falling back to in-memory MongoDB...')
     try {
