@@ -5,23 +5,19 @@ import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 import slowDown from 'express-slow-down'
 
-
 import authRoutes from './routes/auth.js'
 import generateRoutes from './routes/generate.js'
 import historyRoutes from './routes/history.js'
-import connectDB, { sanitizeRequest } from './utils/database.js'
+import { sanitizeRequest } from './utils/database.js'
 import logger from './utils/logger.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
 
-
-
-
-
 const app = express()
+
 const PORT = process.env.PORT || 3001
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
+const FRONTEND_URL = process.env.FRONTEND_URL || ''
 const CORS_ORIGIN = process.env.NODE_ENV === 'production'
-  ? process.env.CORS_ORIGIN?.split(',')
+  ? (process.env.CORS_ORIGIN?.split(',') || (FRONTEND_URL ? [FRONTEND_URL] : []))
   : [/^http:\/\/localhost:\d+$/, /^https:\/\/.*\.app\.github\.dev$/]
 
 const speedLimiter = slowDown({
@@ -39,19 +35,14 @@ app.use(
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", 'data:'],
-        connectSrc: ["'self'", ...CORS_ORIGIN, 'wss:', 'ws:'],
+        connectSrc: ["'self'", 'https://*.vercel.app', 'ws:', 'wss:'],
         fontSrc: ["'self'", 'fonts.gstatic.com'],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: []
       }
-    },
-    xFrameOptions: { action: 'deny' },
-    xContentTypeOptions: true,
-    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
+    }
   })
 )
-
 app.use(
   cors({
     origin: CORS_ORIGIN,
@@ -60,7 +51,6 @@ app.use(
     allowedHeaders: ['Content-Type', 'Authorization']
   })
 )
-
 app.use(express.json({ limit: '32kb' }))
 app.use(express.urlencoded({ extended: true, limit: '32kb' }))
 app.use(cookieParser())
@@ -78,11 +68,9 @@ app.get('/health', (_req, res) => {
 app.use(notFoundHandler)
 app.use(errorHandler)
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  const connectDB = (await import('./utils/database.js')).default
   connectDB()
-}
-
-if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT}`)
   })

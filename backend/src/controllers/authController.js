@@ -10,11 +10,17 @@ const signToken = (user) => {
   )
 }
 
+const isProduction = process.env.NODE_ENV === 'production'
+const FRONTEND_URL = process.env.FRONTEND_URL || ''
+const frontendDomain = FRONTEND_URL ? new URL(FRONTEND_URL).hostname : null
+
 const cookieOptions = {
   httpOnly: true,
-  sameSite: 'strict',
-  secure: true,
-  maxAge: 7 * 24 * 60 * 60 * 1000
+  sameSite: isProduction ? 'none' : 'lax',
+  secure: isProduction,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  domain: frontendDomain || undefined,
+  path: '/'
 }
 
 export const register = async (req, res, next) => {
@@ -37,6 +43,7 @@ export const register = async (req, res, next) => {
 
     res.status(201).json({
       message: 'Registration successful',
+      token,
       user: { id: user._id, email: user.email }
     })
   } catch (error) {
