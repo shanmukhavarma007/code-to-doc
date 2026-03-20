@@ -1,8 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 export const Toast = ({ message, type = 'error', onClose, duration = 5000 }) => {
   const [isVisible, setIsVisible] = useState(true)
   const [isExiting, setIsExiting] = useState(false)
+
+  const handleClose = useCallback(() => {
+    setIsExiting(true)
+    setTimeout(() => {
+      setIsVisible(false)
+      onClose?.()
+    }, 300)
+  }, [onClose])
 
   useEffect(() => {
     if (duration > 0) {
@@ -11,15 +19,7 @@ export const Toast = ({ message, type = 'error', onClose, duration = 5000 }) => 
       }, duration)
       return () => clearTimeout(timer)
     }
-  }, [duration])
-
-  const handleClose = () => {
-    setIsExiting(true)
-    setTimeout(() => {
-      setIsVisible(false)
-      onClose?.()
-    }, 300)
-  }
+  }, [duration, handleClose])
 
   if (!isVisible) return null
 

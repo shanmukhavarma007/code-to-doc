@@ -25,7 +25,6 @@ const Home = () => {
     retryCount,
     generate, 
     retry,
-    clearOutput,
     softReset,
     saveToStorage,
     loadFromStorage
@@ -42,7 +41,7 @@ const Home = () => {
       if (savedState.output) setOutput(savedState.output)
     }
     setIsInitialLoading(false)
-  }, [authLoading])
+  }, [authLoading, isInitialLoading, loadFromStorage, setOutput])
 
   useEffect(() => {
     if (!isInitialLoading && !authLoading && (code || output)) {
