@@ -21,7 +21,7 @@ const app = express()
 const PORT = process.env.PORT || 3001
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
 const CORS_ORIGIN = process.env.NODE_ENV === 'production'
-  ? process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN?.split(',')
   : [/^http:\/\/localhost:\d+$/, /^https:\/\/.*\.app\.github\.dev$/]
 
 const speedLimiter = slowDown({
