@@ -11,12 +11,14 @@ const signToken = (user) => {
 }
 
 const isProduction = process.env.NODE_ENV === 'production'
+const isVercel = !!process.env.VERCEL
 
 const cookieOptions = {
   httpOnly: true,
   sameSite: isProduction ? 'none' : 'lax',
   secure: true,
   maxAge: 7 * 24 * 60 * 60 * 1000,
+  domain: isProduction && isVercel ? '.vercel.app' : undefined,
   path: '/'
 }
 
