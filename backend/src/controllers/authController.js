@@ -11,15 +11,12 @@ const signToken = (user) => {
 }
 
 const isProduction = process.env.NODE_ENV === 'production'
-const FRONTEND_URL = process.env.FRONTEND_URL || ''
-const frontendDomain = FRONTEND_URL ? new URL(FRONTEND_URL).hostname : null
 
 const cookieOptions = {
   httpOnly: true,
   sameSite: isProduction ? 'none' : 'lax',
-  secure: isProduction,
+  secure: true,
   maxAge: 7 * 24 * 60 * 60 * 1000,
-  domain: frontendDomain || undefined,
   path: '/'
 }
 
