@@ -2,11 +2,10 @@ import logger from './logger.js'
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const MODEL = 'openrouter/free'
+const MODEL = 'anthropic/claude-3-haiku-20240229'
 
 if (!OPENROUTER_API_KEY) {
-  logger.error('OPENROUTER_API_KEY is not set in environment variables')
-  process.exit(1)
+  logger.warn('OPENROUTER_API_KEY is not set - documentation generation will fail')
 }
 
 const SYSTEM_PROMPT = `You are a technical documentation generator.
@@ -22,6 +21,10 @@ Generate clear, structured Markdown documentation with the following sections:
 Output ONLY the documentation in Markdown format. Do not include any additional text or explanations.`
 
 const generateDocumentation = async (code, language) => {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('Documentation service is not configured. Please contact the administrator.')
+  }
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 30000)
 
